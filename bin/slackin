@@ -5,8 +5,8 @@ var args = require('args')
 var slackin = require('./../dist').default
 
 args
-  .option(['p', 'port'], 'Port to listen on [$PORT or 3000]', require('hostenv').PORT || process.env.PORT || 3000)
-  .option(['h', 'hostname'], 'Hostname to listen on [$HOSTNAME or 0.0.0.0]', require('hostenv').HOSTNAME || process.env.WEBSITE_HOSTNAME || '0.0.0.0')
+  .option(['p', 'port'], 'Port to listen on [$PORT or 3000]', process.env.OPENSHIFT_NODEJS_PORT || require('hostenv').PORT || process.env.PORT || 3000)
+  .option(['h', 'hostname'], 'Hostname to listen on [$HOSTNAME or 0.0.0.0]', process.env.OPENSHIFT_NODEJS_IP || require('hostenv').HOSTNAME || process.env.WEBSITE_HOSTNAME || '0.0.0.0')
   .option(['c', 'channels'], 'One or more comma-separated channel names to allow single-channel guests [$SLACK_CHANNELS]', process.env.SLACK_CHANNELS)
   .option(['i', 'interval'], 'How frequently (ms) to poll Slack [$SLACK_INTERVAL or 5000]', process.env.SLACK_INTERVAL || 5000)
   .option(['P', 'path'], 'Path to serve slackin under', '/')
@@ -40,8 +40,8 @@ if (!org || !token || !recaptchaSecret) {
   flags.recaptchaSecret = recaptchaSecret
 }
 
-var port = flags.port || process.env.PORT
-var hostname = flags.hostname
+var port = flags.port || process.env.OPENSHIFT_NODEJS_PORT || process.env.PORT
+var hostname = flags.hostname || process.env.OPENSHIFT_NODEJS_IP
 
 slackin(flags).listen(port, hostname, function (err) {
   if (err) throw err
