@@ -57,9 +57,9 @@
   },
   "scripts": {
     "test": "mocha && eslint lib/**",
-    "postinstall": "gulp",
+    "postinstall": "gulp && chmod +x bin/slackin",
     "build": "gulp",
-    "start": "chmod +x bin/slackin && ./bin/slackin"
+    "start": "./bin/slackin"
   },
   "now": {
     "files": [
