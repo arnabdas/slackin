@@ -40,7 +40,7 @@ if (!org || !token || !recaptchaSecret) {
   flags.recaptchaSecret = recaptchaSecret
 }
 
-var port = flags.port
+var port = flags.port || process.env.PORT
 var hostname = flags.hostname
 
 slackin(flags).listen(port, hostname, function (err) {
