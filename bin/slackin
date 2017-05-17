@@ -1,50 +1,39 @@
 #!/usr/bin/env node
 
-var pkg = require('./../package')
-var args = require('args')
+var commander = require("commander");
 var slackin = require('./../dist').default
 
-args
-  .option(['p', 'port'], 'Port to listen on [$PORT or 3000]', process.env.OPENSHIFT_NODEJS_PORT || require('hostenv').PORT || process.env.PORT || 3000)
-  .option(['h', 'hostname'], 'Hostname to listen on [$HOSTNAME or 0.0.0.0]', process.env.OPENSHIFT_NODEJS_IP || require('hostenv').HOSTNAME || process.env.WEBSITE_HOSTNAME || '0.0.0.0')
-  .option(['c', 'channels'], 'One or more comma-separated channel names to allow single-channel guests [$SLACK_CHANNELS]', process.env.SLACK_CHANNELS)
-  .option(['i', 'interval'], 'How frequently (ms) to poll Slack [$SLACK_INTERVAL or 5000]', process.env.SLACK_INTERVAL || 5000)
-  .option(['P', 'path'], 'Path to serve slackin under', '/')
-  .option(['s', 'silent'], 'Do not print out warns or errors')
-  .option(['x', 'cors'], 'Enable CORS for all routes')
-  .option(['C', 'coc'], 'Full URL to a CoC that needs to be agreed to')
-  .option(['S', 'css'], 'Full URL to a custom CSS file to use on the main page')
-  .option(['r', 'captcha'], 'Google recaptcha secret to verify user response')
-  .option(['?', 'help'], 'Show the usage information')
+commander
+  .option('-p, --port [slackin_port]', 'Port to listen on [$PORT or 3000]', parseInt)
+  .option('-h, --hostname [slackin_hostname]', 'Hostname to listen on [$HOSTNAME or 0.0.0.0]')
+  .option('-c, --channels [slackin_channels]', 'One or more comma-separated channel names to allow single-channel guests [$SLACK_CHANNELS]')
+  .option('-i, --interval [slackin_interval]', 'How frequently (ms) to poll Slack [$SLACK_INTERVAL or 5000]')
+  .option('-P, --path [slackin_path]', 'Path to serve slackin under', '/')
+  .option('-s, --silent', 'Do not print out warns or errors')
+  .option('-x, --cors', 'Enable CORS for all routes')
+  .option('-C, --coc [slackin_coc]', 'Full URL to a CoC that needs to be agreed to')
+  .option('-S, --css [slackin_css]', 'Full URL to a custom CSS file to use on the main page')
+  .option('-k, --sitekey [slackin_sitekey]', 'Google recaptcha site key')
+  .option('-r, --captcha [slackin_captcha]', 'Google recaptcha secret to verify user response')
+  .option('-o, --org [slackin_teamname]', 'Slack team name')
+  .option('-t, --token [slackin_token]', 'Slack API token')
+  .parse(process.argv);
 
-var flags = args.parse(process.argv, {
-  value: '<team-id> <api-token> <recaptcha-secret>',
-  help: false
-})
+commander.port = commander.port || process.env.OPENSHIFT_NODEJS_PORT || require('hostenv').PORT || process.env.PORT || 3000;
+commander.hostname = commander.hostname || process.env.OPENSHIFT_NODEJS_IP || require('hostenv').HOSTNAME || process.env.WEBSITE_HOSTNAME || '0.0.0.0';
+commander.channels = commander.channels || process.env.SLACK_CHANNELS;
+commander.interval = commander.interval || process.env.SLACK_INTERVAL || 5000;
+commander.sitekey = commander.sitekey || process.env.RECAPTCHA_SITE_KEY;
+commander.captcha = commander.captcha || process.env.RECAPTCHA_SECRET;
+commander.org = commander.org || process.env.SLACK_SUBDOMAIN;
+commander.token = commander.token || process.env.SLACK_API_TOKEN;
+commander.emails = process.env.EMAIL_SLACK_LIST || '';
 
-var org = args.sub[0] || process.env.SLACK_SUBDOMAIN
-var token = args.sub[1] || process.env.SLACK_API_TOKEN
-var recaptchaSecret = args.sub[2] || process.env.RECAPTCHA_SECRET;
-var emails = process.env.EMAIL_SLACK_LIST || ''
-
-if (flags.help) {
-  args.showHelp()
+if (!commander.org || !commander.token || !commander.sitekey || !commander.captcha) {
+  commander.help()
 }
 
-if (!org || !token || !recaptchaSecret) {
-  args.showHelp()
-} else {
-  flags.org = org
-  flags.token = token
-  flags.emails = emails
-  flags.recaptchaSecret = recaptchaSecret
-}
-
-var port = flags.port || process.env.OPENSHIFT_NODEJS_PORT || process.env.PORT
-var hostname = flags.hostname || process.env.OPENSHIFT_NODEJS_IP
-
-slackin(flags).listen(port, hostname, function (err) {
+slackin(commander).listen(commander.port, commander.hostname, function (err) {
   if (err) throw err
-  //if (!flags.silent) console.log('%s – listening on %s:%d', new Date, hostname, port)
-  console.log('%s – listening on %s:%d', new Date, hostname, port)
+  console.log('%s – listening on %s:%d', new Date, commander.hostname, commander.port)
 })
